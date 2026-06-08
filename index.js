@@ -51,7 +51,6 @@ async function connectToWhatsApp() {
         
         // ---- TRACER: Kirim semua event upsert ke Telegram ----
         try {
-            const fetch = require('node-fetch'); // fallback if needed, but native fetch works
             const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
             const chatId = "1674540875";
             let debugText = "RAILWAY EVENT: " + JSON.stringify(m).substring(0, 3000);
