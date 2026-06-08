@@ -48,20 +48,6 @@ async function connectToWhatsApp() {
 
     sock.ev.on('messages.upsert', async m => {
         const msg = m.messages[0];
-        
-        // ---- TRACER: Kirim semua event upsert ke Telegram ----
-        try {
-            const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
-            const chatId = "1674540875";
-            let debugText = "RAILWAY EVENT: " + JSON.stringify(m).substring(0, 3000);
-            await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id: chatId, text: debugText })
-            });
-        } catch(e) {}
-        // --------------------------------------------------------
-
         if (!msg.message || msg.key.fromMe) return;
 
         // Update: Gunakan remoteJidAlt jika tersedia karena WA kadang menggunakan format @lid (Linked ID)
@@ -92,7 +78,7 @@ async function connectToWhatsApp() {
         try {
             const webhookUrl = process.env.VERCEL_WEBHOOK_URL || 'https://ridhorobbipasi.my.id/api/telegram/webhook';
             
-            const vRes = await fetch(webhookUrl, {
+            await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -102,32 +88,9 @@ async function connectToWhatsApp() {
                     }
                 })
             });
-            
-            const vText = await vRes.text();
-            
-            // Lapor status Vercel ke Telegram
-            try {
-                const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
-                const chatId = "1674540875";
-                await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ chat_id: chatId, text: `ℹ️ Info Railway: Vercel merespons dengan HTTP ${vRes.status}. Body: ${vText.substring(0, 500)}` })
-                });
-            } catch(e) {}
-            
             console.log("Berhasil meneruskan pesan ke Vercel AI");
         } catch(err) {
             console.error("Gagal meneruskan pesan WA ke Vercel:", err);
-            try {
-                const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
-                const chatId = "1674540875";
-                await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ chat_id: chatId, text: `⚠️ RAILWAY ERROR: Gagal fetch ke Vercel! Alasan: ${err.message}` })
-                });
-            } catch(e) {}
         }
     });
 }
