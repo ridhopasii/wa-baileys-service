@@ -65,14 +65,7 @@ async function connectToWhatsApp() {
         if (!text) return;
 
         console.log("Menerima pesan WA dari Admin:", text);
-        
-        // --- TAMBAHAN DEBUG SEMENTARA ---
-        try {
-            await sock.sendMessage(senderId, { text: `[Debug Railway] Pesan Anda ("${text}") berhasil ditangkap Railway. Sedang meneruskan ke Vercel...` });
-        } catch (e) {
-            console.error("Gagal kirim pesan debug:", e);
-        }
-        // --------------------------------
+
 
         // Forward pesan WA ini ke Webhook Vercel (Telegram) kita
         try {
