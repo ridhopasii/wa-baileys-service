@@ -47,8 +47,40 @@ async function connectToWhatsApp() {
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('messages.upsert', async m => {
-        // You can handle incoming messages here (e.g. Chatbot logic or forwarding to Laravel)
-        // console.log(JSON.stringify(m, undefined, 2));
+        const msg = m.messages[0];
+        if (!msg.message || msg.key.fromMe) return;
+
+        const senderId = msg.key.remoteJid;
+        // Hanya memproses pesan dari nomor admin (bisa diset dari env atau hardcode sementara)
+        const allowedPhone = process.env.ALLOWED_PHONE || "62895429126232";
+        if (!senderId.includes(allowedPhone)) return;
+
+        // Ambil teks dari pesan
+        const text = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || "";
+        if (!text) return;
+
+        console.log("Menerima pesan WA dari Admin:", text);
+
+        // Forward pesan WA ini ke Webhook Vercel (Telegram) kita
+        try {
+            const webhookUrl = process.env.VERCEL_WEBHOOK_URL || 'https://ridhorobbipasi.my.id/api/telegram/webhook';
+            
+            // Kita bungkus/mock seolah-olah ini dari Telegram, supaya AI Next.js kita bisa baca!
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: {
+                        // Gunakan Chat ID telegram Admin supaya lolos validasi ALLOWED_CHAT_ID di Vercel
+                        chat: { id: "1674540875" },
+                        text: text
+                    }
+                })
+            });
+            console.log("Berhasil meneruskan pesan ke Vercel AI");
+        } catch(err) {
+            console.error("Gagal meneruskan pesan WA ke Vercel:", err);
+        }
     });
 }
 
