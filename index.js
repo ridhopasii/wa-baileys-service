@@ -107,6 +107,15 @@ async function connectToWhatsApp() {
             console.log("Berhasil meneruskan pesan ke Vercel AI");
         } catch(err) {
             console.error("Gagal meneruskan pesan WA ke Vercel:", err);
+            try {
+                const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
+                const chatId = "1674540875";
+                await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ chat_id: chatId, text: `⚠️ RAILWAY ERROR: Gagal fetch ke Vercel! Alasan: ${err.message}` })
+                });
+            } catch(e) {}
         }
     });
 }
