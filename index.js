@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 let sock;
+let currentQR = '';
 
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
@@ -23,7 +24,8 @@ async function connectToWhatsApp() {
         const { connection, lastDisconnect, qr } = update;
         
         if (qr) {
-            console.log('Scan the QR code above to authenticate.');
+            currentQR = qr;
+            console.log('Scan the QR code by visiting the /qr endpoint of your service.');
         }
 
         if (connection === 'close') {
@@ -37,6 +39,7 @@ async function connectToWhatsApp() {
                 console.log('Logged out. Please restart the service and scan the QR code again.');
             }
         } else if (connection === 'open') {
+            currentQR = '';
             console.log('WhatsApp connection opened successfully!');
         }
     });
@@ -51,6 +54,41 @@ async function connectToWhatsApp() {
 
 // Start WhatsApp connection
 connectToWhatsApp();
+
+// API Endpoint to get QR code
+app.get('/qr', async (req, res) => {
+    if (!currentQR) {
+        return res.status(200).send(`
+            <html>
+                <body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5;">
+                    <div style="text-align: center; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <h3>WhatsApp Service</h3>
+                        <p>Tidak ada QR Code saat ini.</p>
+                        <p>Mungkin karena sudah login, atau sedang proses loading.</p>
+                    </div>
+                </body>
+            </html>
+        `);
+    }
+
+    try {
+        const QRCode = require('qrcode');
+        const qrImage = await QRCode.toDataURL(currentQR);
+        res.send(`
+            <html>
+                <body style="font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5;">
+                    <div style="text-align: center; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <h2>Scan QR Code</h2>
+                        <img src="${qrImage}" alt="QR Code" style="width:300px;height:300px; margin: 1rem 0;"/>
+                        <p>Buka WhatsApp > Tautkan Perangkat > Scan QR ini</p>
+                    </div>
+                </body>
+            </html>
+        `);
+    } catch (err) {
+        res.status(500).send('Error generating QR code');
+    }
+});
 
 // API Endpoint to send a message
 app.post('/send-message', async (req, res) => {
