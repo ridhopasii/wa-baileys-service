@@ -64,7 +64,9 @@ async function connectToWhatsApp() {
 
         if (!msg.message || msg.key.fromMe) return;
 
-        const senderId = msg.key.remoteJid;
+        // Update: Gunakan remoteJidAlt jika tersedia karena WA kadang menggunakan format @lid (Linked ID)
+        const senderId = msg.key.remoteJidAlt || msg.key.remoteJid;
+        
         // Kita izinkan beberapa nomor admin sekaligus
         const allowedPhones = (process.env.ALLOWED_PHONE || "62895429126232,6282381118520").split(',');
         
