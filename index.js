@@ -60,8 +60,13 @@ async function connectToWhatsApp() {
             return;
         }
 
-        // Ambil teks dari pesan
-        const text = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || "";
+        // Ambil teks dari pesan (termasuk kalau pakai fitur disappearing message / ephemeralMessage)
+        let messageData = msg.message;
+        if (messageData?.ephemeralMessage) {
+            messageData = messageData.ephemeralMessage.message;
+        }
+
+        const text = messageData?.conversation || messageData?.extendedTextMessage?.text || messageData?.imageMessage?.caption || "";
         if (!text) return;
 
         console.log("Menerima pesan WA dari Admin:", text);
