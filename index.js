@@ -92,18 +92,30 @@ async function connectToWhatsApp() {
         try {
             const webhookUrl = process.env.VERCEL_WEBHOOK_URL || 'https://ridhorobbipasi.my.id/api/telegram/webhook';
             
-            // Kita bungkus/mock seolah-olah ini dari Telegram, supaya AI Next.js kita bisa baca!
-            await fetch(webhookUrl, {
+            const vRes = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: {
-                        // Gunakan Chat ID telegram Admin supaya lolos validasi ALLOWED_CHAT_ID di Vercel
                         chat: { id: "1674540875" },
                         text: text
                     }
                 })
             });
+            
+            const vText = await vRes.text();
+            
+            // Lapor status Vercel ke Telegram
+            try {
+                const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
+                const chatId = "1674540875";
+                await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ chat_id: chatId, text: `ℹ️ Info Railway: Vercel merespons dengan HTTP ${vRes.status}. Body: ${vText.substring(0, 500)}` })
+                });
+            } catch(e) {}
+            
             console.log("Berhasil meneruskan pesan ke Vercel AI");
         } catch(err) {
             console.error("Gagal meneruskan pesan WA ke Vercel:", err);
