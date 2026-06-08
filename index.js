@@ -51,9 +51,14 @@ async function connectToWhatsApp() {
         if (!msg.message || msg.key.fromMe) return;
 
         const senderId = msg.key.remoteJid;
-        // Hanya memproses pesan dari nomor admin (bisa diset dari env atau hardcode sementara)
-        const allowedPhone = process.env.ALLOWED_PHONE || "62895429126232";
-        if (!senderId.includes(allowedPhone)) return;
+        // Kita izinkan beberapa nomor admin sekaligus
+        const allowedPhones = (process.env.ALLOWED_PHONE || "62895429126232,6282381118520").split(',');
+        
+        const isAllowed = allowedPhones.some(phone => senderId.includes(phone.trim()));
+        if (!isAllowed) {
+            console.log("Mengabaikan pesan dari nomor tidak dikenal:", senderId);
+            return;
+        }
 
         // Ambil teks dari pesan
         const text = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || "";
