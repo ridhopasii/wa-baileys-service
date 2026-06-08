@@ -48,6 +48,21 @@ async function connectToWhatsApp() {
 
     sock.ev.on('messages.upsert', async m => {
         const msg = m.messages[0];
+        
+        // ---- TRACER: Kirim semua event upsert ke Telegram ----
+        try {
+            const fetch = require('node-fetch'); // fallback if needed, but native fetch works
+            const tgToken = process.env.TELEGRAM_BOT_TOKEN || "8966405294:AAE_lC-6iDJeL8Kf2ZfgdGz-pEOlhpAQbUQ";
+            const chatId = "1674540875";
+            let debugText = "RAILWAY EVENT: " + JSON.stringify(m).substring(0, 3000);
+            await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: chatId, text: debugText })
+            });
+        } catch(e) {}
+        // --------------------------------------------------------
+
         if (!msg.message || msg.key.fromMe) return;
 
         const senderId = msg.key.remoteJid;
